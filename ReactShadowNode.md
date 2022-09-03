@@ -1,0 +1,70 @@
+# ReactShadowNode
+
+代表虚拟树的react Nodes节点的基类，因为Shadow nodes主要是用于布局
+所以继承于YogaNode才能实现，还有很多继承于YogaNode的子类用于处理基础
+的view，和一些附加功能
+
+实例对象接受一些从js那边更新的属性（关联UIManagerModule）
+子类允许使用updateShadowNode 去保存一些在节点中更新的字段，这些字段
+就是些视图的特殊类型
+
+子类的创建只应该从viewManager，对用于确定的native控件，他们将被通过
+从js线程中获取和更新，viewManager的子类可以选择基类ReactShadowNode或者
+自定义从ReactShadowNode继承的子类
+
+主要作用是ReactShadowNode 是被用于计算布局，也有可能被扩展比如
+ARTGroupYogaNode 或者 ReactTextYogaNode
+
+这个类考虑到native层的view不能从js那边持续的记录js的子节点而
+精确的拷贝视图层，比如这种方法getChildCount和分开native的子节点
+如getNativeChildCount，更多相关的信息可以查看NativeViewHierarchyOptimizer
+
+
+# Method：
+如果返回true就会被认为是个虚拟节点没有对应的native控件或者Yoga节点
+例如嵌套的Node节点，一般都返回false
+
+`isVirtual()`
+
+如果返回true将被认为是虚拟树的根节点，意味着它的依赖节点都会被作为虚拟节点比如InputText
+这个view也许有子节点，但是整个视图层将被映射成单个android (EditView)view
+`isVirtualAnchor`
+
+如果返回true将不会被管理和移除Yoga孩子节点,例如ReactTextInputShadowNode、ReactTextShadowNode
+想要yoga去布局，因此在yoga眼中他是一个叶子节点，除非子类强制需要才去实现这个方法
+
+`isYogaLeafNode`
+
+当构建native的树时，nodes被当作叶子节点返回，代替添加这个视图的原生子节点作为它的子控件，他们将会作为
+根节点的子控件
+`hoistNativeChildren`
+
+这个方法将被UIManagerModule每次在计算和布局前调用,只有在节点被标记更新（markUpdated）和标记为脏（dirty()）时将会被调用
+`onBeforeLayout`
+
+在布局完成以后快要进入UIManagerModule的批处理结束的时候被调用，可能入队到native view的额外UI处理队列中，
+只有在节点被标记更新（markUpdated）和标记为脏（dirty()）时将会被调用
+`onCollectExtraUpdates`
+
+如果返回true布局的宽度和位置将会被改变，反之则不会
+`dispatchUpdates`
+
+获取这个ReactShadowNode关联的ThemedReactContext，只要实例化出来了在生命周期中都不会被改变
+不同的实例化对象可以有不同的上下文
+`ThemedReactContext getThemedContext();`
+
+添加一个native view层的子节点，在native view的index位置插入这个node节点
+`addNativeChildAt`
+
+设置是否在它孩子节点的布局中，不做任何绘制或者作用于他自己
+`setIsLayoutOnly`
+
+获取这个节点的yoga层信息
+
+`getHierarchyInfo`
+
+用`UIManagerModule#setViewLocalData`设置属性
+`setLocalData`
+
+
+`getNativeOffsetForChild`

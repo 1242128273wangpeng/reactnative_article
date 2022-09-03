@@ -1,0 +1,22 @@
+# UIImplementation
+
+整个UIImplementation起着承上启下的作用，对外给UIManagerModule提供入口方法，内部由三个重要的类提供功能：
+1. ShadowNodeRegistry
+2. UIViewOperationQueue
+3. NativeViewHierarchyOptimizer
+
+**一、ShadowNodeRegistry**
+该类的职责就是对ReactRootNode进行管理。通过ShadowNodeRegister管理reactTag（ReactRootTag），查询到实际的ShadowNode。
+
+
+**二、UIViewOperationQueue**
+当UIManagerModule执行的UI操作、比如创建View，更新布局或属性等这些command，都会先通过这个类缓存，然后等dispatchViewUpdates出发执行
+
+
+**三、NativeViewHierarchyOptimizer**
+看名字就知道，NativeViewHierarchyOptimizer就是NativeViewHierarchyManager和UINativeViewOperationQueue的包装
+NativeViewHierarchyOptimizer和NativeViewHierarchyManager都是通过UINativeViewQueue串连起来的
+
+UI主要两个方面的功能
+1. 提供对ShadowNode的管理，主要是ReactRootNode；
+2. 将来自UIManagerModule的UI操作传递给NativeViewHierarchyOptimizer(内部由UINativeViewQueue代理)最终由NativeViewHierarchyManager执行
